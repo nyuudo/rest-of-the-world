@@ -2,7 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 import type { RestCountry } from "@/types/restcountries";
 
-/* This Server Side Rendering method produce a warning about missing a "key" when it's actually there ?!? */
+/* This was just a way to check the main fetching features as an async funciton */
+/* The Server Side Rendering method produce a warning about missing a "key" when it's actually there ?!? */
 export default async function SSR() {
   const data = await fetch("https://restcountries.com/v3.1/all");
   const countries: RestCountry[] = await data.json();
