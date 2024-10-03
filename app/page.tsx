@@ -1,101 +1,93 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import Link from "next/link";
 import Image from "next/image";
+import type { RestCountries } from "@/types/restcountries";
+import { setRegion } from "@/store/regionSlice";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [countries, setCountries] = useState<RestCountries>([]);
+  const dispatch = useDispatch();
+  const selectedRegion = useSelector(
+    (state: RootState) => state.region.selectedRegion
+  );
+  const searchTerm = useSelector((state: RootState) => state.search.searchTerm);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  // Fetch data and update state
+  useEffect(() => {
+    async function fetchCountries() {
+      const res = await fetch("https://restcountries.com/v3.1/all");
+      const data = await res.json();
+      setCountries(data);
+    }
+    fetchCountries();
+  }, []);
+
+  // Function to Select Region
+  const handleRegionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    dispatch(setRegion(event.target.value));
+  };
+
+  const filteredCountries = selectedRegion
+    ? countries
+        .filter((country) => country.region === selectedRegion)
+        .sort((a, b) => (a.name?.common > b.name?.common ? 1 : -1))
+    : countries;
+
+  // Filter based on search term
+  const filteredCountriesWithSearch = searchTerm
+    ? filteredCountries.filter((country) =>
+        country.name?.common.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : filteredCountries;
+
+  // The condition for the data waiting
+  if (!countries) return <div>Loading...</div>;
+
+  return (
+    <main className="bg-gradient-to-t from-stone-400 to-stone-100 md:lg:px-[3.75rem] xl:px-20 flex flex-col gap-4 py-8">
+      <div className="self-center md:self-end">
+        <p className=" text-sky-700 font-bold text-center md:text-right p-2">
+          Sort by Region
+        </p>
+        <select
+          value={selectedRegion}
+          onChange={handleRegionChange}
+          className="text-sm font-medium drop-shadow-md text-stone-500 hover:text-pink-500 rounded-lg block w-60 p-2 transition duration-1000 ease-in-out"
+        >
+          <option value="">All Regions</option>
+          <option value="Antarctic">Antarctic</option>
+          <option value="Americas">Americas</option>
+          <option value="Europe">Europe</option>
+          <option value="Oceania">Oceania</option>
+          <option value="Asia">Asia</option>
+          <option value="Africa">Africa</option>
+        </select>
+      </div>
+      <section className="justify-center flex flex-column flex-wrap gap-6 md:flex-row">
+        {filteredCountriesWithSearch.map((country) => (
+          <Link
+            // used the name of the country as key to maintain consistency
+            key={country.name?.common}
+            href={`/country/${country.name?.common.replace(/\s+/g, "-")}`}
+            className="justify-center gap-4 group relative flex flex-col rounded-md bg-stone-100 hover:bg-white w-[260px] h-[200px] hover:scale-105 transition duration-1000 ease-in-out"
           >
             <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+              src={country.flags?.svg}
+              alt={country.name?.common}
+              width={230}
+              height={115}
+              className="mx-auto max-h-[115px] grayscale group-hover:drop-shadow-lg group-hover:mix-blend-normal group-hover:grayscale-0"
+            ></Image>
+            <h2 className="text-stone-600 text-sm font-bold text-center group-hover:text-sky-950 px-2">
+              {country.name?.common}
+            </h2>
+          </Link>
+        ))}
+      </section>
+    </main>
   );
 }
